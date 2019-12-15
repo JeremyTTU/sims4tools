@@ -23,6 +23,7 @@ using System.Drawing;
 using System.IO;
 using s4pi.Interfaces;
 using s4pi.ImageResource.Properties;
+using s4pi.ImageResource;
 
 namespace ImageResource
 {
@@ -48,6 +49,7 @@ namespace ImageResource
         public ImageResource(int APIversion, Stream s)
             : base(APIversion, s)
         {
+            if (!ImageResourceSettings.ParseResource) return;
             if (stream != null) return;
             stream = new MemoryStream();
             (new Bitmap(128, 128)).Save(stream, System.Drawing.Imaging.ImageFormat.Png);
@@ -65,7 +67,9 @@ namespace ImageResource
         /// </summary>
         [MinimumVersion(1)]
         [MaximumVersion(recommendedApiVersion)]
-        public Image Value { get { this.stream.Position = 0; return Image.FromStream(this.stream); } }
+        public Image Value { get { 
+                this.stream.Position = 0; 
+                return Image.FromStream(this.stream); } }
     }
 
     public class ImageResourceHandler : AResourceHandler

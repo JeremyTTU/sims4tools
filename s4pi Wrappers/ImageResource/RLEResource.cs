@@ -51,6 +51,7 @@ namespace s4pi.ImageResource
         #region Data I/O
         public void Parse(Stream s)
         {
+            if (!ImageResourceSettings.ParseResource) return;
             if (s == null || s.Length == 0) { this.data = new byte[0]; return; }
             BinaryReader r = new BinaryReader(s);
             info = new RLEInfo(s);

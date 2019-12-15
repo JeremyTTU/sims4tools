@@ -28,6 +28,7 @@ using System.Collections.Specialized;
 using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -36,22 +37,30 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using CASPartResource;
 using s4pi.Extensions;
 using s4pi.Helpers;
+using s4pi.ImageResource;
 using s4pi.Interfaces;
 using s4pi.Package;
 using s4pi.WrapperDealer;
 using S4PIDemoFE.Settings;
 using S4PIDemoFE.Tools;
+using static s4pi.ImageResource.ThumbnailResource;
 using Version = S4PIDemoFE.Settings.Version;
 
 namespace S4PIDemoFE
 {
     public partial class MainForm : Form
     {
+        public static string BASEPATH = @"D:\SimsFileShareDump";
+
+
         private static readonly List<string> fields = AApiVersionedFields.GetContentFields(0,
-            typeof (AResourceIndexEntry));
+            typeof(AResourceIndexEntry));
 
         private static readonly List<string> unwantedFields = new List<string>(new[] { "Stream" });
 
@@ -131,6 +140,306 @@ namespace S4PIDemoFE
 
                 this.MainForm_LoadFormSettings();
             }
+
+            //FindValidPackages();
+            //LoadPackageCache();
+            //CreatePackageCache();
+            //CreateThumbnails();
+        }
+
+        private void FindValidPackages()
+        {
+            var files2 = Directory.EnumerateFiles(@"D:\SimsFileShareDump\FileContents", "*.package", SearchOption.AllDirectories);
+
+            using (var output = File.CreateText(Path.Combine(@"D:\SimsFileShareDump\Packages.data")))
+            {
+                foreach (var file in files2)
+                {
+                    var filename = Path.GetFileName(file);
+                    var foldername = Path.GetFileName(Path.GetDirectoryName(file));
+
+                    try
+                    {
+                        using (var package = Package.OpenPackage(0, file, false))
+                        {
+                            package.GetResourceList.Count();
+                            Console.WriteLine($"{foldername}/{filename} - GOOD");
+                            output.WriteLine($"{foldername}|{filename}|true");
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine($"{foldername}/{filename} - FAIL");
+                        output.WriteLine($"{foldername}|{filename}|false");
+                    }
+                }
+            }
+        }
+
+        private void CreateThumbnails()
+        {
+            var path = @"D:\SimsFileShareDump\FileThumbnails\";
+
+            var files2 = Directory.EnumerateFiles(@"D:\SimsFileShareDump\FileContents", "*.package", SearchOption.AllDirectories);
+            var done = 0;
+            //var path = @"C:\Users\jeremy\source\repos\SimsFileShareDownloader\SimsFileShareDownloader\bin\Debug\SimsFileShareDump\FileThumbnails\";
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            Parallel.ForEach(files2, new ParallelOptions { MaxDegreeOfParallelism = 1 }, file =>
+            {
+                if (file.ToLower().Contains("merged"))
+                    return;
+
+                var filename = Path.GetFileName(file);
+                var folder = Path.GetFileName(Path.GetDirectoryName(file));
+
+                var images = 1;
+
+                try
+                {
+                    Console.Write(file);
+
+                    using (var package = Package.OpenPackage(0, file))
+                    {
+
+                        var thumbnailResourceTypes = WrapperDealer.TypeMap.Where(tm => tm.Value.FullName.EndsWith(".ThumbnailResource")).Select(tm => tm.Key);
+                        var thumbnailResources = package.GetResourceList.Where(rl => thumbnailResourceTypes.Contains("0x" + rl.ResourceType.ToString("X8")));
+
+                        var imagesFromPackage = new Dictionary<string, MemoryStream>();
+                        var lockage = new object();
+
+                        Parallel.ForEach(thumbnailResources, thumbnailResource =>
+                        {
+                            var item = browserWidget1.CreateItem(thumbnailResource);
+                            var res = WrapperDealer.GetResource(0, package, thumbnailResource, false);
+
+                            try
+                            {
+                                var stream = new MemoryStream();
+
+                                if (res is ThumbnailResource)
+                                    ((ThumbnailResource)res).ToImageStream().CopyTo(stream);
+                                else if (res is ThumbnailControl)
+                                    ((ThumbnailResource)res).ToImageStream().CopyTo(stream);
+
+                                stream.Position = 0;
+
+                                var md5 = ToHex(MD5.Create().ComputeHash(stream), true);
+
+                                lock (lockage)
+                                    if (!imagesFromPackage.ContainsKey(md5))
+                                        imagesFromPackage.Add(md5, stream);
+                            }
+                            catch
+                            {
+                            }
+                        });
+
+                        if (imagesFromPackage.Count > 0)
+                        {
+                            var getImages = imagesFromPackage.AsParallel().Select(o => Image.FromStream(o.Value));
+                            var biggestImages = getImages.AsParallel().Where(p => p.Height == getImages.Max(o => o.Height));
+
+                            foreach (var image in biggestImages)
+                            {
+                                var newfile = images.ToString().PadLeft(5, '0') + ".png";
+
+                                if (!Directory.Exists(Path.Combine(path, folder)))
+                                    Directory.CreateDirectory(Path.Combine(path, folder));
+                                if (!Directory.Exists(Path.Combine(path, folder, filename)))
+                                    Directory.CreateDirectory(Path.Combine(path, folder, filename));
+
+                                image.Save(File.Create(Path.Combine(path, folder, filename, newfile)), ImageFormat.Png);
+
+                                //using (var output = File.Create(Path.Combine(path, folder, filename, newfile)))
+                                //{
+                                //    image.Value.Position = 0;
+                                //    image.Value.CopyTo(output, 4096);
+                                //}
+                                images++;
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            });
+        }
+
+        private static string ToHex(byte[] bytes, bool upperCase)
+        {
+            StringBuilder result = new StringBuilder(bytes.Length * 2);
+
+            for (int i = 0; i < bytes.Length; i++)
+                result.Append(bytes[i].ToString(upperCase ? "X2" : "x2"));
+
+            return result.ToString();
+        }
+
+        private static void CreatePackageCache()
+        {
+            var files = Directory.EnumerateFiles(@"D:\SimsFileShareDump\FileContents", "*.package", SearchOption.AllDirectories);
+
+            Parallel.ForEach(files, new ParallelOptions { MaxDegreeOfParallelism = 1 }, file =>
+            {
+                try
+                {
+                    using (var p = Package.OpenPackage(0, file, false))
+                    {
+                        var packageCache = new PackageCache(file);
+                        Console.Write(packageCache);
+
+                        Parallel.ForEach(p.GetResourceList, p1 =>
+                       {
+                           try
+                           {
+                               var re = WrapperDealer.GetResource(0, p, p1);
+                               if (re is CASPartResource.CASPartResource)
+                               {
+                                   var sor = re as CASPartResource.CASPartResource;
+                                   var packageItem = new CasItem
+                                   {
+                                       AgeGender = sor.AgeGender,
+                                       BodyType = sor.BodyType,
+                                       BodySubType = sor.BodySubType,
+                                       ParentKey = sor.ParentKey,
+                                       PartDescriptionKey = sor.PartDescriptionKey,
+                                       PartTitleKey = sor.PartTitleKey,
+                                       Name = sor["Name"],
+                                       Version = sor["Version"]
+                                   };
+                                   packageCache.Items.Add(packageItem);
+                                   Console.Write(".");
+                                   //foreach (var i in new[] { "Version", "Name", "PropertyID", "PartTitleKey", "PartDescriptionKey", "BodySubType", "AgeGender" })
+                                   //        Console.WriteLine($"{i} => {sor[i]}");
+                               }
+
+                           }
+                           catch
+                           {
+                           }
+                       });
+
+                        if (packageCache.Items.Count > 0)
+                        {
+                            packageCache.Save();
+                            Console.WriteLine(" saved");
+                        }
+                        else
+                        {
+                            Console.WriteLine(" ignore");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($" failure: {ex.Message}");
+                }
+            });
+        }
+
+        private static void LoadPackageCache()
+        {
+            var files3 = Directory.EnumerateFiles(@"D:\SimsFileShareDump\PackageCache", "*.cache", SearchOption.AllDirectories);
+
+            var packageCaches = new List<PackageCache>();
+
+            foreach (var file in files3)
+            {
+                var packageCache = PackageCache.Load(file);
+                packageCaches.Add(packageCache);
+            }
+
+            Console.ReadLine();
+        }
+
+        private static int imageCount = 1;
+
+        private void Automation()
+        {
+            var files = Directory.EnumerateFiles(@"C:\Users\jeremy\source\repos\SimsFileShareDownloader\SimsFileShareDownloader\bin\Debug\SimsFileShareDump", "*.package", SearchOption.AllDirectories);
+            var done = 0;
+
+            foreach (var file in files)
+            {
+                Console.Write(Path.GetFileName(file));
+                imageCount = 1;
+                Action setFile = () =>
+                {
+                    this.Filename = file;
+                    Application.DoEvents();
+                };
+                Invoke(setFile);
+
+                while (!waitForComplete.WaitOne(250))
+                    Application.DoEvents();
+
+                done++;
+                Console.WriteLine($"... DONE    {done}/{files.Count()}");
+            }
+        }
+
+        public ManualResetEvent waitForComplete = new ManualResetEvent(false);
+        public ManualResetEvent waitForThumbnailWritten = new ManualResetEvent(false);
+
+        private void ThumbnailControl_OnThumbnailRendered(object sender, ThumbnailArgs e)
+        {
+            var newFilename = Path.GetFileNameWithoutExtension(Filename) + "-" + imageCount.ToString().PadLeft(3, '0') + ".png";
+            //var path = Path.GetDirectoryName(Filename);
+            var path = @"C: \Users\jeremy\source\repos\SimsFileShareDownloader\SimsFileShareDownloader\bin\Debug\SimsFileShareDump\Images\";
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            Action a = () => { e.Bitmap.Save(Path.Combine(path, newFilename)); };
+            Invoke(a);
+            imageCount++;
+            Console.Write("...WROTE1");
+            waitForThumbnailWritten.Set();
+            waitForThumbnailWritten.Reset();
+        }
+
+        private void ThumbnailResource_OnThumbnailRendered(object sender, ThumbnailArgs2 e)
+        {
+            var newFilename = Path.GetFileNameWithoutExtension(Filename) + "-" + imageCount.ToString().PadLeft(3, '0') + ".png";
+            //var path = Path.GetDirectoryName(Filename);
+            var path = @"C: \Users\jeremy\source\repos\SimsFileShareDownloader\SimsFileShareDownloader\bin\Debug\SimsFileShareDump\Images\";
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            Action a = () => { e.Bitmap.Save(Path.Combine(path, newFilename)); };
+            Invoke(a);
+            imageCount++;
+            Console.Write("...WROTE2");
+            waitForThumbnailWritten.Set();
+            waitForThumbnailWritten.Reset();
+        }
+
+
+        private void OMG_LOL(object sender, EventArgs e)
+        {
+            var bw = sender as BrowserWidget;
+            if (bw == null) return;
+
+            foreach (ListViewItem li in bw.GetListViewItems)
+            {
+                var rie = li.Tag as IResourceIndexEntry;
+
+                var rt = "0x" + rie.ResourceType.ToString("X8");
+                var t = WrapperDealer.TypeMap.FirstOrDefault(o => o.Key == rt);
+
+                if (t.Key != null && t.Value.FullName.EndsWith(".ThumbnailResource"))
+                {
+                    Action a = () =>
+                    {
+                        bw.SelectItemIndex(li.Index);
+                        Application.DoEvents();
+                    };
+                    Invoke(a);
+                    Console.Write("...FOUND");
+                    waitForThumbnailWritten.WaitOne();
+                }
+            }
+            waitForComplete.Set();
         }
 
         public MainForm(params string[] args)
@@ -147,7 +456,7 @@ namespace S4PIDemoFE
         private void MainForm_LoadFormSettings()
         {
             FormWindowState s =
-                Enum.IsDefined(typeof (FormWindowState), Properties.Settings.Default.FormWindowState)
+                Enum.IsDefined(typeof(FormWindowState), Properties.Settings.Default.FormWindowState)
                     ? (FormWindowState)Properties.Settings.Default.FormWindowState
                     : FormWindowState.Minimized;
 
@@ -224,6 +533,8 @@ namespace S4PIDemoFE
                 }
                 this.cmdLineBatch = new List<string>();
             }
+
+            //foreach (var resource in this.resource.)
         }
 
         public bool IsClosing;
@@ -265,96 +576,94 @@ namespace S4PIDemoFE
                 }
                 catch (InvalidDataException idex)
                 {
-                    if (idex.Message.Contains("magic tag"))
-                    {
-                        CopyableMessageBox.Show(
-                            "Could not open package:\n" + this.Filename + "\n\n" +
-                            "This file does not contain the expected package identifier in the header.\n" +
-                            "This could be because it is a protected package (e.g. a Store item), a Sims3Pack or some other random file.\n\n"
-                            +
-                            "---\nError message:\n" +
-                            idex.Message,
-                            myName + ": Unable to open file",
-                            CopyableMessageBoxButtons.OK,
-                            CopyableMessageBoxIcon.Error);
-                    }
-                    else if (idex.Message.Contains("major version"))
-                    {
-                        CopyableMessageBox.Show(
-                            "Could not open package:\n" + this.Filename + "\n\n" +
-                            "This file does not contain the expected package major version number in the header.\n" +
-                            "This could be because it is a package for Sims2 or Spore.\n\n" +
-                            "---\nError message:\n" +
-                            idex.Message,
-                            myName + ": Unable to open file",
-                            CopyableMessageBoxButtons.OK,
-                            CopyableMessageBoxIcon.Error);
-                    }
-                    else
-                    {
-                        IssueException(idex, "Could not open package:\n" + this.Filename);
-                    }
-                    this.Filename = "";
+                    //if (idex.Message.Contains("magic tag"))
+                    //{
+                    //    CopyableMessageBox.Show(
+                    //        "Could not open package:\n" + this.Filename + "\n\n" +
+                    //        "This file does not contain the expected package identifier in the header.\n" +
+                    //        "This could be because it is a protected package (e.g. a Store item), a Sims3Pack or some other random file.\n\n"
+                    //        +
+                    //        "---\nError message:\n" +
+                    //        idex.Message,
+                    //        myName + ": Unable to open file",
+                    //        CopyableMessageBoxButtons.OK,
+                    //        CopyableMessageBoxIcon.Error);
+                    //}
+                    //else if (idex.Message.Contains("major version"))
+                    //{
+                    //    CopyableMessageBox.Show(
+                    //        "Could not open package:\n" + this.Filename + "\n\n" +
+                    //        "This file does not contain the expected package major version number in the header.\n" +
+                    //        "This could be because it is a package for Sims2 or Spore.\n\n" +
+                    //        "---\nError message:\n" +
+                    //        idex.Message,
+                    //        myName + ": Unable to open file",
+                    //        CopyableMessageBoxButtons.OK,
+                    //        CopyableMessageBoxIcon.Error);
+                    //}
+                    //else
+                    //{
+                    //    IssueException(idex, "Could not open package:\n" + this.Filename);
+                    //}
+                    //this.Filename = "";
                 }
                 catch (UnauthorizedAccessException uaex)
                 {
-                    if (this.ReadWrite)
-                    {
-                        int i = CopyableMessageBox.Show(
-                            "Could not open package:\n" + this.Filename + "\n\n" +
-                            "The file could be write-protected, in which case it might be possible to open it read-only.\n\n"
-                            +
-                            "---\nError message:\n" +
-                            uaex.Message,
-                            myName + ": Unable to open file",
-                            CopyableMessageBoxIcon.Stop,
-                            new[] { "&Open read-only", "C&ancel" },
-                            1,
-                            1);
-                        if (i == 0)
-                        {
-                            this.Filename = "0:" + this.Filename;
-                        }
-                        else
-                        {
-                            this.Filename = "";
-                        }
-                    }
-                    else
-                    {
-                        IssueException(uaex, "Could not open package:\n" + this.Filename);
-                        this.Filename = "";
-                    }
+                    //if (this.ReadWrite)
+                    //{
+                    //    int i = CopyableMessageBox.Show(
+                    //        "Could not open package:\n" + this.Filename + "\n\n" +
+                    //        "The file could be write-protected, in which case it might be possible to open it read-only.\n\n"
+                    //        +
+                    //        "---\nError message:\n" +
+                    //        uaex.Message,
+                    //        myName + ": Unable to open file",
+                    //        CopyableMessageBoxIcon.Stop,
+                    //        new[] { "&Open read-only", "C&ancel" },
+                    //        1,
+                    //        1);
+                    //    if (i == 0)
+                    //    {
+                    //        this.Filename = "0:" + this.Filename;
+                    //    }
+                    //    else
+                    //    {
+                    //        this.Filename = "";
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    IssueException(uaex, "Could not open package:\n" + this.Filename);
+                    //    this.Filename = "";
+                    //}
                 }
                 catch (IOException ioex)
                 {
-                    int i = CopyableMessageBox.Show(
-                        "Could not open package:\n" + this.Filename + "\n\n" +
-                        "There may be another process with exclusive access to the file (e.g. The Sims 3).  " +
-                        "After exiting the other process, you can retry opening the package.\n\n" +
-                        "---\nError message:\n" +
-                        ioex.Message,
-                        myName + ": Unable to open file",
-                        CopyableMessageBoxIcon.Stop,
-                        new[] { "&Retry", "C&ancel" },
-                        1,
-                        1);
-                    if (i == 0)
-                    {
-                        this.Filename = (this.ReadWrite ? "1:" : "0:") + this.Filename;
-                    }
-                    else
-                    {
-                        this.Filename = "";
-                    }
+                    //int i = CopyableMessageBox.Show(
+                    //    "Could not open package:\n" + this.Filename + "\n\n" +
+                    //    "There may be another process with exclusive access to the file (e.g. The Sims 3).  " +
+                    //    "After exiting the other process, you can retry opening the package.\n\n" +
+                    //    "---\nError message:\n" +
+                    //    ioex.Message,
+                    //    myName + ": Unable to open file",
+                    //    CopyableMessageBoxIcon.Stop,
+                    //    new[] { "&Retry", "C&ancel" },
+                    //    1,
+                    //    1);
+                    //if (i == 0)
+                    //{
+                    //    this.Filename = (this.ReadWrite ? "1:" : "0:") + this.Filename;
+                    //}
+                    //else
+                    //{
+                    //    this.Filename = "";
+                    //}
                 }
-#if !DEBUG
                 catch (Exception ex)
                 {
-                    IssueException(ex, "Could not open package:\n" + Filename);
-                    Filename = "";
+                    waitForComplete.Set();
                 }
-#endif
+
             }
             else
             {
@@ -1114,20 +1423,20 @@ namespace S4PIDemoFE
             tgin.ResName = this.resourceName;
 
             SaveFileDialog sfd = new SaveFileDialog
-                                 {
-                                     DefaultExt = this.pnAuto.Controls[0] is RichTextBox ? ".txt" : ".hex",
-                                     AddExtension = true,
-                                     CheckPathExists = true,
-                                     FileName = tgin + (this.pnAuto.Controls[0] is RichTextBox ? ".txt" : ".hex"),
-                                     Filter =
+            {
+                DefaultExt = this.pnAuto.Controls[0] is RichTextBox ? ".txt" : ".hex",
+                AddExtension = true,
+                CheckPathExists = true,
+                FileName = tgin + (this.pnAuto.Controls[0] is RichTextBox ? ".txt" : ".hex"),
+                Filter =
                                          this.pnAuto.Controls[0] is RichTextBox
                                              ? "Text documents (*.txt*)|*.txt|All files (*.*)|*.*"
                                              : "Hex dumps (*.hex)|*.hex|All files (*.*)|*.*",
-                                     FilterIndex = 1,
-                                     OverwritePrompt = true,
-                                     Title = @"Save preview content",
-                                     ValidateNames = true
-                                 };
+                FilterIndex = 1,
+                OverwritePrompt = true,
+                Title = @"Save preview content",
+                ValidateNames = true
+            };
             DialogResult dr = sfd.ShowDialog();
             if (dr != DialogResult.OK)
             {
@@ -1225,14 +1534,14 @@ namespace S4PIDemoFE
             File.SetAttributes(filename, FileAttributes.ReadOnly | FileAttributes.Temporary);
 
             Process p = new Process
-                        {
-                            StartInfo =
+            {
+                StartInfo =
                             {
                                 FileName = command,
                                 Arguments = filename,
                                 UseShellExecute = false
                             }
-                        };
+            };
 
             p.Exited += this.p_Exited;
             p.EnableRaisingEvents = true;
@@ -1495,11 +1804,11 @@ namespace S4PIDemoFE
                 if (this.browserWidget1.SelectedResources.Count == 1)
                 {
                     MyDataFormat d = new MyDataFormat
-                                     {
-                                         tgin =
+                    {
+                        tgin =
                                              this.browserWidget1.SelectedResource as
                                              AResourceIndexEntry
-                                     };
+                    };
                     d.tgin.ResName = this.resourceName;
                     d.data =
                         WrapperDealer.GetResource(0, this.CurrentPackage, this.browserWidget1.SelectedResource, true)
@@ -1518,7 +1827,7 @@ namespace S4PIDemoFE
                         MyDataFormat d = new MyDataFormat { tgin = rie as AResourceIndexEntry };
                         d.tgin.ResName = this.browserWidget1.ResourceName(rie);
                         d.data = WrapperDealer.GetResource(0, this.CurrentPackage, rie, true).AsBytes;
-                            //Don't need wrapper
+                        //Don't need wrapper
                         l.Add(d);
                     }
 
@@ -1591,9 +1900,9 @@ namespace S4PIDemoFE
             ResourceDetails ir = new ResourceDetails(!string.IsNullOrEmpty(this.resourceName),
                 false,
                 this.browserWidget1.SelectedResource)
-                                 {
-                                     Compress = this.browserWidget1.SelectedResource.Compressed != 0
-                                 };
+            {
+                Compress = this.browserWidget1.SelectedResource.Compressed != 0
+            };
             if (ir.UseName)
             {
                 ir.ResourceName = this.resourceName;
@@ -1751,7 +2060,7 @@ namespace S4PIDemoFE
             }
 
             IResource rres = WrapperDealer.CreateNewResource(0, "*");
-            ConstructorInfo ci = rres.GetType().GetConstructor(new[] { typeof (int), typeof (Stream) });
+            ConstructorInfo ci = rres.GetType().GetConstructor(new[] { typeof(int), typeof(Stream) });
             return (IResource)ci.Invoke(new object[] { 0, ms });
         }
 
@@ -2157,11 +2466,11 @@ namespace S4PIDemoFE
         private void ToolsSearch()
         {
             SearchForm searchForm = new SearchForm
-                                    {
-                                        Width = this.Width * 4 / 5,
-                                        Height = this.Height * 4 / 5,
-                                        CurrentPackage = this.CurrentPackage
-                                    };
+            {
+                Width = this.Width * 4 / 5,
+                Height = this.Height * 4 / 5,
+                CurrentPackage = this.CurrentPackage
+            };
             searchForm.Go += this.searchForm_Go;
             searchForm.Show();
         }
@@ -2316,6 +2625,8 @@ namespace S4PIDemoFE
         {
             get { return !string.IsNullOrEmpty(Properties.Settings.Default.TextEditorCmd); }
         }
+
+        public static List<object> Items { get; internal set; } = new List<object>();
 
         private void SettingsExternalPrograms()
         {
@@ -2695,7 +3006,7 @@ namespace S4PIDemoFE
             }
 
             bool selectedItems = this.resource != null || this.browserWidget1.SelectedResources.Count > 0;
-                // one or more
+            // one or more
             this.menuBarWidget.Enable(MenuBarWidget.MB.MBR_exportResources, selectedItems);
             this.menuBarWidget.Enable(MenuBarWidget.MB.MBR_exportToPackage, selectedItems);
             //menuBarWidget1.Enable(MenuBarWidget.MB.MBE_cut, resource != null);
@@ -2718,7 +3029,7 @@ namespace S4PIDemoFE
             }
 
             Type t = AApiVersionedFields.GetContentFieldTypes(0, this.resource.GetType())["Value"];
-            if (typeof (string).IsAssignableFrom(t))
+            if (typeof(string).IsAssignableFrom(t))
             {
                 return true;
             }

@@ -396,7 +396,7 @@ namespace S4PIDemoFE
                     };
 
                     var tbox = control as RichTextBox;
-                    if(wrapper != null)
+                    if (wrapper != null)
                     {
                         var value = dType.GetProperties().FirstOrDefault(p => p.Name == "WrapperValue").GetValue(wrapper, null);
                         tbox.Text = value.ToString();
@@ -424,6 +424,10 @@ namespace S4PIDemoFE
         }
     }
 
+    public class ThumbnailArgs : EventArgs
+    {
+        public Bitmap Bitmap { get; set; }
+    }
 
     class ThumbnailControl : ABuiltInValueControl
     {
@@ -444,6 +448,8 @@ namespace S4PIDemoFE
             0xE254AE6E
         };
 
+        public static event EventHandler<ThumbnailArgs> OnThumbnailRendered;
+
         PictureBox pb = new PictureBox();
 
         public ThumbnailControl(Stream s)
@@ -453,6 +459,8 @@ namespace S4PIDemoFE
                 return;
             ThumbnailResource r = new ThumbnailResource(1, s);
             pb.Image = r.Image;
+            if (OnThumbnailRendered != null)
+                OnThumbnailRendered(this, new ThumbnailArgs { Bitmap = r.Image });
         }
 
         public override bool IsAvailable
@@ -544,7 +552,7 @@ namespace S4PIDemoFE
             Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
             ReadOnly = true,
         };
- 
+
         public HexControl(Stream s)
             : base(s)
         {

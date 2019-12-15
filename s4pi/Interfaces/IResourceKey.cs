@@ -34,10 +34,16 @@ namespace s4pi.Interfaces
         /// <summary>
         /// The "group" the resource is part of
         /// </summary>
+        /// 
         UInt32 ResourceGroup { get; set; }
         /// <summary>
         /// The "instance" number of the resource
         /// </summary>
         UInt64 Instance { get; set; }
+
+        /// <summary>
+        /// Gets Hex version of ResourceType
+        /// </summary>
+        String ResourceId { get; }
     }
 }

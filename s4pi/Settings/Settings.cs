@@ -32,6 +32,16 @@ namespace s4pi.Settings
             // initialisation code, like read from settings file...
         }
 
+        public static void DisableChecking()
+        {
+            checking = false;
+        }
+
+        public static void NotTS4()
+        {
+            isTS4 = false;
+        }
+
         static bool checking = true;
         /// <summary>
         /// When true, run extra checks as part of normal operation.

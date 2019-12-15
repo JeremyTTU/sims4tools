@@ -44,6 +44,7 @@ namespace s4pi.ImageResource
 
         protected void Parse(Stream s)
         {
+            if (!ImageResourceSettings.ParseResource) return;
             if (s == null || s.Length == 0) { this.data = null; return; }
             s.Position = 0;
             this.header = new DDSHeader();

@@ -108,6 +108,8 @@ namespace S4PIDemoFE
 
         bool btnOKCanEnable { get { return cbType.Valid && (tbGroup.Text.Length * tbInstance.Text.Length > 0); } }
 
+        public string ResourceId => "0x" + ResourceType.ToString("X8");
+
         private void btnOKCancel_Click(object sender, EventArgs e)
         {
             this.DialogResult = (sender as Button).DialogResult;
@@ -244,7 +246,7 @@ namespace S4PIDemoFE
             ulong ulongResult;
             if (tbGroup.Text.StartsWith((prefix)))
             {
-                if(uint.TryParse(tbGroup.Text.Substring(2), NumberStyles.HexNumber, null, out uintResult))
+                if (uint.TryParse(tbGroup.Text.Substring(2), NumberStyles.HexNumber, null, out uintResult))
                 {
                     uintResult |= uintMask;
                     tbGroup.Text = prefix + uintResult.ToString("X8");

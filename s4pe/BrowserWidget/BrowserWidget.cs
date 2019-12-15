@@ -93,6 +93,7 @@ namespace S4PIDemoFE
         #region Methods
         public void Add(IResourceIndexEntry rie, bool select = true)
         {
+            MainForm.Items.AddRange(new[] { rie, });
             AddRange(new[] { rie, });
             if (select)
                 SelectedResource = rie;
@@ -154,6 +155,7 @@ namespace S4PIDemoFE
                 pb.Value = 0;
                 pbLabel.Text = "Updating resource list...";
                 Application.DoEvents();
+                MainForm.Items.AddRange(list.Select(x => x.Item2).ToArray());
                 listView1.Items.AddRange(list.Select(x => x.Item2).ToArray());
 
                 if (newNameMap) { ClearNameMap(); nameMap_ResourceChanged(null, null); }
@@ -231,6 +233,13 @@ namespace S4PIDemoFE
             foreach (IDictionary<ulong, string> nmap in nameMap)
                 if (nmap.ContainsKey(rie.Instance)) return nmap[rie.Instance];
             return "";
+        }
+
+        public void SelectThumbnails()
+        {
+            foreach (ListViewItem a in listView1.Items)
+                Console.WriteLine(a);
+            Console.ReadLine();
         }
 
         public void SelectAll()
@@ -316,7 +325,7 @@ namespace S4PIDemoFE
 
         [Browsable(true)]
         [Category("Behavior")]
-        [DefaultValue(false)]
+        [DefaultValue(true)]
         [Description("Set to true to display resource names found in the package")]
         public bool DisplayResourceNames
         {
@@ -707,7 +716,7 @@ namespace S4PIDemoFE
             }
         }
 
-        ListViewItem CreateItem(IResourceIndexEntry ie)
+        public ListViewItem CreateItem(IResourceIndexEntry ie)
         {
             ListViewItem lvi = new ListViewItem();
             if (ie.IsDeleted) lvi.Font = new Font(lvi.Font, lvi.Font.Style | FontStyle.Strikeout);
@@ -858,7 +867,15 @@ namespace S4PIDemoFE
             return "";
         }
 
+        public ListView.ListViewItemCollection GetListViewItems => this.listView1.Items;
 
+        public void SelectItemIndex(int position)
+        {
+            for (var x = 0; x < listView1.Items.Count; x++)
+                this.listView1.Items[position].Selected = false;
+
+            this.listView1.Items[position].Selected = true;
+        }
 
         protected virtual void OnListUpdated(object sender, EventArgs e) { if (ListUpdated != null) ListUpdated(sender, e); }
 

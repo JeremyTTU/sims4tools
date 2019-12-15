@@ -71,6 +71,7 @@ namespace s4pi.ImageResource
 
         public void Parse(Stream s)
         {
+            if (!ImageResourceSettings.ParseResource) return;
             BinaryReader r = new BinaryReader(s);
             uint size = r.ReadUInt32();
             if (size != this.size) throw new InvalidDataException(string.Format("Expected size: 0x{0:X8}, read 0x{1:X8}", this.size, size));

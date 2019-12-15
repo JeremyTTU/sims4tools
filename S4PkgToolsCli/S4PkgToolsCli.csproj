@@ -1,0 +1,217 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Costura.Fody.4.1.0\build\Costura.Fody.props" Condition="Exists('..\packages\Costura.Fody.4.1.0\build\Costura.Fody.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{AD6855FB-8896-44EB-8CE2-932D98DA8DAB}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>S4PkgToolsCli</RootNamespace>
+    <AssemblyName>S4PkgToolsCli</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Costura, Version=4.1.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
+      <HintPath>..\packages\Costura.Fody.4.1.0\lib\net40\Costura.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="PackageBrowser.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PackageBrowser.Designer.cs">
+      <DependentUpon>PackageBrowser.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PackageVersion.cs" />
+    <Compile Include="ProcessedPackage.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="FodyWeavers.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CS System Classes\CS System Classes.csproj">
+      <Project>{00200e76-c245-42a7-b567-5c30edbce977}</Project>
+      <Name>CS System Classes</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pe Helpers\DMAPImageHelper\DMAPImageHelper.csproj">
+      <Project>{1d46ac70-f281-4c1b-9e77-a3b7ce7b19a3}</Project>
+      <Name>DMAPImageHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pe Helpers\RLEDDSHelper\RLEDDSHelper.csproj">
+      <Project>{e86710e3-89dd-48e5-9be2-349fdfdd2d26}</Project>
+      <Name>RLEDDSHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pe Helpers\RLESDDSHelper\RLESDDSHelper.csproj">
+      <Project>{0e5198fd-098f-4c5d-8007-759e8208b833}</Project>
+      <Name>RLESDDSHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pe Helpers\ThumbnailHelper\ThumbnailHelper.csproj">
+      <Project>{edbe4989-d08b-41a0-be3c-a68307606daf}</Project>
+      <Name>ThumbnailHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Extras\Extensions\Extensions.csproj">
+      <Project>{9b4c57ba-e09f-4439-98b4-b9b535a4abf6}</Project>
+      <Name>Extensions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Extras\Filetable\Filetable.csproj">
+      <Project>{feaa8674-9363-4bc7-b016-7be984a2d185}</Project>
+      <Name>Filetable</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Extras\Helpers\Helpers.csproj">
+      <Project>{d9b63641-d3be-4120-9115-7d67b1238fbf}</Project>
+      <Name>Helpers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\AnimationResources\AnimationResources.csproj">
+      <Project>{b33f19de-f211-4d32-8d03-43024b88f177}</Project>
+      <Name>AnimationResources</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\CASPartResource\CASPartResource.csproj">
+      <Project>{38d21f02-c139-43c8-8b74-d84e22b89f50}</Project>
+      <Name>CASPartResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\CatalogResource\CatalogResource.csproj">
+      <Project>{0e257ab5-b560-462b-8b6c-631a90380d9e}</Project>
+      <Name>CatalogResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\ComplateResource\ComplateResource.csproj">
+      <Project>{513b8c1f-2be4-46d6-b95d-836a1f36855e}</Project>
+      <Name>ComplateResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\DataResource\DataResource.csproj">
+      <Project>{e8176722-be4e-47ff-a8a6-bff4be7a5de8}</Project>
+      <Name>DataResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\DefaultResource\DefaultResource.csproj">
+      <Project>{06330e2b-9f3f-4a45-8b47-11795f5100fb}</Project>
+      <Name>DefaultResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\GenericRCOLResource\GenericRCOLResource.csproj">
+      <Project>{47693a2a-1f86-47ca-a170-cc0c195a53b7}</Project>
+      <Name>GenericRCOLResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\ImageResource\ImageResource.csproj">
+      <Project>{ad53972b-d73e-4935-a4ad-3ebe0e3516f2}</Project>
+      <Name>ImageResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\JazzResource\JazzResource.csproj">
+      <Project>{7aff0d94-4f70-4a1b-842c-24ea613807b7}</Project>
+      <Name>JazzResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\MeshChunks\MeshChunks.csproj">
+      <Project>{b1e4d2ec-5027-4f44-8c46-a0485dff7060}</Project>
+      <Name>MeshChunks</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\MiscellaneousResource\MiscellaneousResource.csproj">
+      <Project>{8cbb25f3-e1f1-472b-989d-b14b98577f9c}</Project>
+      <Name>MiscellaneousResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\ModularResource\ModularResource.csproj">
+      <Project>{4c8eee00-88bb-4a22-beb2-68245d98cb78}</Project>
+      <Name>ModularResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\NameMapResource\NameMapResource.csproj">
+      <Project>{5b43f245-ab0d-49fa-bc1e-1168103c7522}</Project>
+      <Name>NameMapResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\NGMPHashMapResource\NGMPHashMapResource.csproj">
+      <Project>{f9d57571-fb42-455d-96da-e1e11347a664}</Project>
+      <Name>NGMPHashMapResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\RigResource\RigResource.csproj">
+      <Project>{77ad91d9-4bd8-4899-9308-e6209265f636}</Project>
+      <Name>RigResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\s4piRCOLChunks\s4piRCOLChunks.csproj">
+      <Project>{f2e30d04-82c7-487f-b9e8-e8babb1c94e1}</Project>
+      <Name>s4piRCOLChunks</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\StblResource\StblResource.csproj">
+      <Project>{672d72ec-89da-4ef3-88cc-beec5ba478b2}</Project>
+      <Name>StblResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\TextResource\TextResource.csproj">
+      <Project>{c55762f3-6eef-4e65-8a9a-cc6022acab79}</Project>
+      <Name>TextResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi Wrappers\TxtcResource\TxtcResource.csproj">
+      <Project>{264de8c9-33d0-451e-9067-8ba0cf2bface}</Project>
+      <Name>TxtcResource</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi.Resource.Commons\s4pi.Commons\s4pi.Commons.csproj">
+      <Project>{bdac59c8-3abf-439f-9c1c-5112cb22f4ad}</Project>
+      <Name>s4pi.Commons</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi.Resource.Commons\s4pi.Resource.Commons.csproj">
+      <Project>{3d2a241b-533b-47b5-a8d1-db3b7953e6a7}</Project>
+      <Name>s4pi.Resource.Commons</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi\Interfaces\Interfaces.csproj">
+      <Project>{51023bd2-9139-438d-b794-95e5ec023537}</Project>
+      <Name>Interfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi\Package\Package.csproj">
+      <Project>{9D8BB6F7-373E-4FBC-B5E8-9709B4CE9A37}</Project>
+      <Name>Package</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi\Settings\Settings.csproj">
+      <Project>{374f37cf-1f27-4613-96fd-9b956a3d82b1}</Project>
+      <Name>Settings</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\s4pi\WrapperDealer\WrapperDealer.csproj">
+      <Project>{fe111523-3266-409b-bc72-f8d4a909a554}</Project>
+      <Name>WrapperDealer</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="PackageBrowser.resx">
+      <DependentUpon>PackageBrowser.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\Fody.6.0.0\build\Fody.targets" Condition="Exists('..\packages\Fody.6.0.0\build\Fody.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Fody.6.0.0\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.6.0.0\build\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\Costura.Fody.4.1.0\build\Costura.Fody.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.4.1.0\build\Costura.Fody.props'))" />
+  </Target>
+</Project>

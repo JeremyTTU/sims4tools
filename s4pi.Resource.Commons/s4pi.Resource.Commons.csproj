@@ -61,7 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="S4_03B33DDF_00000000_D89CB9186B79ACB7.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -88,6 +88,11 @@ namespace s4pi.Interfaces
         /// </summary>
         [ElementPriority(3)]
         public virtual ulong Instance { get { return instance; } set { if (instance != value) { instance = value; OnElementChanged(); } } }
+
+        /// <summary>
+        /// Gets Hex Version of ResourceType
+        /// </summary>
+        public string ResourceId => "0x" + ResourceType.ToString("X8");
         #endregion
 
         #region IEqualityComparer<IResourceKey> Members
