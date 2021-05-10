@@ -1,0 +1,230 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="TheSimsDownloaderModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <!--Errors Found During Generation:
+warning 6002: The table/view 'TheSimsDownloader.dbo.Data' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+        <EntityType Name="Data">
+          <Key>
+            <PropertyRef Name="Id" />
+            <PropertyRef Name="Json" />
+          </Key>
+          <Property Name="Id" Type="int" Nullable="false" />
+          <Property Name="Json" Type="varchar" MaxLength="3000" Nullable="false" />
+        </EntityType>
+        <EntityType Name="DataItem">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="int" Nullable="false" />
+          <Property Name="ERROR" Type="varchar" MaxLength="1024" />
+          <Property Name="URL" Type="varchar" MaxLength="2048" />
+          <Property Name="S3FILENAME" Type="varchar" MaxLength="1024" />
+          <Property Name="PREVIEWURL" Type="varchar" MaxLength="2048" />
+          <Property Name="ARTIST" Type="varchar" MaxLength="2048" />
+          <Property Name="IMAGEID" Type="int" />
+          <Property Name="IMAGEEXTENSION" Type="varchar" MaxLength="2048" />
+          <Property Name="DESCRIPTION" Type="varchar" MaxLength="3999" />
+          <Property Name="CATEGORY" Type="varchar" MaxLength="2048" />
+          <Property Name="GAME" Type="int" />
+          <Property Name="FREE" Type="bit" />
+          <Property Name="WASNOTFREE" Type="bit" />
+          <Property Name="PUBLISHDATE" Type="varchar" MaxLength="2048" />
+          <Property Name="REVISION" Type="varchar" MaxLength="2048" />
+          <Property Name="CREATORMEMBERID" Type="int" />
+          <Property Name="TITLE" Type="varchar" MaxLength="2048" />
+          <Property Name="S3FILETYPE" Type="varchar" MaxLength="2048" />
+          <Property Name="CATEGORYID" Type="int" />
+          <Property Name="FILEID" Type="int" />
+          <Property Name="DOWNLOADED" Type="bit" />
+          <Property Name="FILENAME" Type="varchar" MaxLength="1024" />
+          <Property Name="FILESIZE" Type="int" />
+        </EntityType>
+        <EntityType Name="DataItemDetail">
+          <Key>
+            <PropertyRef Name="Category" />
+            <PropertyRef Name="Tag" />
+            <PropertyRef Name="DataItemId" />
+          </Key>
+          <Property Name="Category" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="Tag" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="DataItemId" Type="int" Nullable="false" />
+        </EntityType>
+        <Association Name="FK_DataItemDetail_ToTable">
+          <End Role="DataItem" Type="Self.DataItem" Multiplicity="1" />
+          <End Role="DataItemDetail" Type="Self.DataItemDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="DataItem">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="DataItemDetail">
+              <PropertyRef Name="DataItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="TheSimsDownloaderModelStoreContainer">
+          <EntitySet Name="DataItem" EntityType="Self.DataItem" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="DataItemDetail" EntityType="Self.DataItemDetail" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Data" EntityType="Self.Data" store:Type="Tables" store:Schema="dbo">
+            <DefiningQuery>SELECT 
+    [Data].[Id] AS [Id], 
+    [Data].[Json] AS [Json]
+    FROM [dbo].[Data] AS [Data]</DefiningQuery>
+          </EntitySet>
+          <AssociationSet Name="FK_DataItemDetail_ToTable" Association="Self.FK_DataItemDetail_ToTable">
+            <End Role="DataItem" EntitySet="DataItem" />
+            <End Role="DataItemDetail" EntitySet="DataItemDetail" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="TheSimsDownloaderModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="TheSimsDownloaderEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Data" EntityType="TheSimsDownloaderModel.Datum" />
+          <EntitySet Name="DataItems" EntityType="TheSimsDownloaderModel.DataItem" />
+          <EntitySet Name="DataItemDetails" EntityType="TheSimsDownloaderModel.DataItemDetail" />
+          <AssociationSet Name="FK_DataItemDetail_ToTable" Association="TheSimsDownloaderModel.FK_DataItemDetail_ToTable">
+            <End Role="DataItem" EntitySet="DataItems" />
+            <End Role="DataItemDetail" EntitySet="DataItemDetails" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="Datum">
+          <Key>
+            <PropertyRef Name="Id" />
+            <PropertyRef Name="Json" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" />
+          <Property Name="Json" Type="String" Nullable="false" MaxLength="3000" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="DataItem">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" />
+          <Property Name="ERROR" Type="String" MaxLength="1024" FixedLength="false" Unicode="false" />
+          <Property Name="URL" Type="String" MaxLength="2048" FixedLength="false" Unicode="false" />
+          <Property Name="S3FILENAME" Type="String" MaxLength="1024" FixedLength="false" Unicode="false" />
+          <Property Name="PREVIEWURL" Type="String" MaxLength="2048" FixedLength="false" Unicode="false" />
+          <Property Name="ARTIST" Type="String" MaxLength="2048" FixedLength="false" Unicode="false" />
+          <Property Name="IMAGEID" Type="Int32" />
+          <Property Name="IMAGEEXTENSION" Type="String" MaxLength="2048" FixedLength="false" Unicode="false" />
+          <Property Name="DESCRIPTION" Type="String" MaxLength="3999" FixedLength="false" Unicode="false" />
+          <Property Name="CATEGORY" Type="String" MaxLength="2048" FixedLength="false" Unicode="false" />
+          <Property Name="GAME" Type="Int32" />
+          <Property Name="FREE" Type="Boolean" />
+          <Property Name="WASNOTFREE" Type="Boolean" />
+          <Property Name="PUBLISHDATE" Type="String" MaxLength="2048" FixedLength="false" Unicode="false" />
+          <Property Name="REVISION" Type="String" MaxLength="2048" FixedLength="false" Unicode="false" />
+          <Property Name="CREATORMEMBERID" Type="Int32" />
+          <Property Name="TITLE" Type="String" MaxLength="2048" FixedLength="false" Unicode="false" />
+          <Property Name="S3FILETYPE" Type="String" MaxLength="2048" FixedLength="false" Unicode="false" />
+          <Property Name="CATEGORYID" Type="Int32" />
+          <Property Name="FILEID" Type="Int32" />
+          <Property Name="DOWNLOADED" Type="Boolean" />
+          <Property Name="FILENAME" Type="String" MaxLength="1024" FixedLength="false" Unicode="false" />
+          <Property Name="FILESIZE" Type="Int32" />
+          <NavigationProperty Name="DataItemDetails" Relationship="TheSimsDownloaderModel.FK_DataItemDetail_ToTable" FromRole="DataItem" ToRole="DataItemDetail" />
+        </EntityType>
+        <EntityType Name="DataItemDetail">
+          <Key>
+            <PropertyRef Name="Category" />
+            <PropertyRef Name="Tag" />
+            <PropertyRef Name="DataItemId" />
+          </Key>
+          <Property Name="Category" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="Tag" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="DataItemId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="DataItem" Relationship="TheSimsDownloaderModel.FK_DataItemDetail_ToTable" FromRole="DataItemDetail" ToRole="DataItem" />
+        </EntityType>
+        <Association Name="FK_DataItemDetail_ToTable">
+          <End Type="TheSimsDownloaderModel.DataItem" Role="DataItem" Multiplicity="1" />
+          <End Type="TheSimsDownloaderModel.DataItemDetail" Role="DataItemDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="DataItem">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="DataItemDetail">
+              <PropertyRef Name="DataItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="TheSimsDownloaderModelStoreContainer" CdmEntityContainer="TheSimsDownloaderEntities">
+          <EntitySetMapping Name="Data">
+            <EntityTypeMapping TypeName="TheSimsDownloaderModel.Datum">
+              <MappingFragment StoreEntitySet="Data">
+                <ScalarProperty Name="Json" ColumnName="Json" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="DataItems">
+            <EntityTypeMapping TypeName="TheSimsDownloaderModel.DataItem">
+              <MappingFragment StoreEntitySet="DataItem">
+                <ScalarProperty Name="FILESIZE" ColumnName="FILESIZE" />
+                <ScalarProperty Name="FILENAME" ColumnName="FILENAME" />
+                <ScalarProperty Name="DOWNLOADED" ColumnName="DOWNLOADED" />
+                <ScalarProperty Name="FILEID" ColumnName="FILEID" />
+                <ScalarProperty Name="CATEGORYID" ColumnName="CATEGORYID" />
+                <ScalarProperty Name="S3FILETYPE" ColumnName="S3FILETYPE" />
+                <ScalarProperty Name="TITLE" ColumnName="TITLE" />
+                <ScalarProperty Name="CREATORMEMBERID" ColumnName="CREATORMEMBERID" />
+                <ScalarProperty Name="REVISION" ColumnName="REVISION" />
+                <ScalarProperty Name="PUBLISHDATE" ColumnName="PUBLISHDATE" />
+                <ScalarProperty Name="WASNOTFREE" ColumnName="WASNOTFREE" />
+                <ScalarProperty Name="FREE" ColumnName="FREE" />
+                <ScalarProperty Name="GAME" ColumnName="GAME" />
+                <ScalarProperty Name="CATEGORY" ColumnName="CATEGORY" />
+                <ScalarProperty Name="DESCRIPTION" ColumnName="DESCRIPTION" />
+                <ScalarProperty Name="IMAGEEXTENSION" ColumnName="IMAGEEXTENSION" />
+                <ScalarProperty Name="IMAGEID" ColumnName="IMAGEID" />
+                <ScalarProperty Name="ARTIST" ColumnName="ARTIST" />
+                <ScalarProperty Name="PREVIEWURL" ColumnName="PREVIEWURL" />
+                <ScalarProperty Name="S3FILENAME" ColumnName="S3FILENAME" />
+                <ScalarProperty Name="URL" ColumnName="URL" />
+                <ScalarProperty Name="ERROR" ColumnName="ERROR" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="DataItemDetails">
+            <EntityTypeMapping TypeName="TheSimsDownloaderModel.DataItemDetail">
+              <MappingFragment StoreEntitySet="DataItemDetail">
+                <ScalarProperty Name="DataItemId" ColumnName="DataItemId" />
+                <ScalarProperty Name="Tag" ColumnName="Tag" />
+                <ScalarProperty Name="Category" ColumnName="Category" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="true" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
